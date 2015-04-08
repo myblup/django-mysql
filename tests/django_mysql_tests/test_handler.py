@@ -252,6 +252,12 @@ class HandlerIterTests(BaseAuthorTestCase):
 
         self.assertEqual(seen_ids, [self.jk.id, self.grisham.id])
 
+    def test_iter_chunk_size_2(self):
+        with Author.objects.handler() as handler:
+            seen_ids = [author.id for author in handler.iter(chunk_size=2)]
+
+        self.assertEqual(seen_ids, [self.jk.id, self.grisham.id])
+
     def test_iter_reverse(self):
         with Author.objects.handler() as handler:
             seen_ids = [author.id for author in handler.iter(reverse=True)]
@@ -391,3 +397,17 @@ class HandlerMultiDBTests(TestCase):
             handler_result = handler.read()[0]
 
         self.assertEqual(handler_result, self.jk)
+
+
+class HandlerGetTests(BaseAuthorTestCase):
+
+    def test_get_by_pk(self):
+        with Author.objects.handler() as handler:
+            jk = handler.get(pk=self.jk.id)
+
+        self.assertEqual(jk, self.jk)
+
+    def test_get_by_pk_does_not_exist(self):
+        with Author.objects.handler() as handler:
+            with self.assertRaises(Author.DoesNotExist):
+                handler.get(pk=-1)

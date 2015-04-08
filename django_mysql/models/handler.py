@@ -45,7 +45,7 @@ class Handler(object):
         self.cursor.__exit__(exc_type, exc_value, traceback)
         self.open = False
 
-    # Public methods
+    # Public methods - base API
 
     def read(self, index='PRIMARY', mode=None, where=None, limit=None,
              **kwargs):
@@ -185,6 +185,18 @@ class Handler(object):
                 mode = 'prev'
             else:
                 mode = 'next'
+
+    # Public methods - 'sugar' API
+
+    def get(self, **kwargs):
+        if len(kwargs) == 1 and 'pk' in kwargs:
+            qs = self.read(index='PRIMARY', value=kwargs['pk'])
+            try:
+                return qs[0]
+            except IndexError:
+                raise self._model.DoesNotExist()
+
+        raise ValueError("Unrecognized 'get'")
 
     # Internal methods
 
