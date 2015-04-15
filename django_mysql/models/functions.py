@@ -120,3 +120,9 @@ class SHA2(Func):
                 .format(",".join(str(x) for x in self.hash_lens))
             )
         super(SHA2, self).__init__(expression, Value(hash_len))
+
+
+# Common Schema Functions
+
+class Throttle(SingleArgFunc):
+    function = 'common_schema.throttle'

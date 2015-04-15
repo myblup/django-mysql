@@ -1,14 +1,15 @@
 # -*- coding:utf-8 -*-
 import hashlib
-from unittest import skipIf
+from unittest import skipIf, SkipTest
 
 import django
+from django.db import connection
 from django.db.models import F
 from django.test import TestCase
 
 from django_mysql.models.functions import (
     Abs, ConcatWS, Ceiling, CRC32, CRC64, Floor, Greatest, Least, MD5, Round,
-    SHA1, SHA2, Sign
+    SHA1, SHA2, Sign, Throttle
 )
 
 from django_mysql_tests.models import Alphabet
@@ -199,6 +200,25 @@ class EncryptionFunctionTests(TestCase):
     def test_sha2_bad_hash_len(self):
         with self.assertRaises(ValueError):
             SHA2('a', 123)
+
+
+@requiresDatabaseFunctions
+class CommonSchemaFunctionTests(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        with connection.cursor() as cursor:
+            cursor.execute("""SELECT 1 FROM INFORMATION_SCHEMA.SCHEMATA
+                              WHERE SCHEMA_NAME = 'common_schema';""")
+            have_common_schema = (len(cursor.fetchall()) > 0)
+
+        if not have_common_schema:
+            raise SkipTest("CommonSchemaFunctionTests require `common_schema`")
+
+        super(CommonSchemaFunctionTests, cls).setUpClass()
+
+    def test_throttle(self):
+        Alphabet.objects.annotate(_throttle=Throttle(1)).all()
 
 
 @skipIf(django.VERSION >= (1, 8),

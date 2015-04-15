@@ -21,6 +21,11 @@ then
     sudo add-apt-repository -y ppa:ondrej/mysql-5.6
     sudo apt-get update
     yes Y | sudo apt-get -y install mysql-server
+
+    # Default thread_stack from this install is too small to load common_schema
+    sudo service mysql stop
+    sed "/thread_stack.*/d" /etc/mysql/my.cnf | sudo tee /etc/mysql/my.cnf
+    sudo service mysql start
   fi
 
 elif [[ $DB == 'mariadb' ]]
@@ -32,5 +37,7 @@ then
   sudo apt-get update -qq
   yes Y | sudo apt-get install -y mariadb-server libmariadbclient-dev
 fi
+
+curl https://common-schema.googlecode.com/files/common_schema-2.2.sql | mysql
 
 mysql -e 'create database if not exists test;'
