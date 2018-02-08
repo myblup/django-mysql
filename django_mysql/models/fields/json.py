@@ -28,6 +28,9 @@ class JSONField(Field):
             kwargs['default'] = dict
         super(JSONField, self).__init__(*args, **kwargs)
 
+
+    
+
     def check(self, **kwargs):
         errors = super(JSONField, self).check(**kwargs)
         errors.extend(self._check_default())
@@ -63,9 +66,9 @@ class JSONField(Field):
         for db in conn_names:
             conn = connections[db]
             if (
-                hasattr(conn, 'mysql_version') and
-                not connection_is_mariadb(conn) and
-                conn.mysql_version >= (5, 7)
+                hasattr(conn, 'mysql_version') 
+                #and not connection_is_mariadb(conn) 
+                and conn.mysql_version >= (5, 7)
             ):
                 any_conn_works = True
 
@@ -88,6 +91,13 @@ class JSONField(Field):
 
     def db_type(self, connection):
         return 'json'
+
+    # XXX cf https://github.com/adamchainz/django-mysql/issues/342
+    # but I'm really not sure about this actually
+    # In the meantime let's do without :-/
+    # def db_check(self, connection):
+    #     data = DictWrapper(self.__dict__, connection.ops.quote_name, "qn_")
+    #     return "JSON_VALID(`%(db_column)s`)" % data
 
     def get_transform(self, name):
         transform = super(JSONField, self).get_transform(name)
